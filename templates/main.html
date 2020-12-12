@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>main</title>
+
+  </head>
+  <body>
+    <div style="text-align: center;">
+      <div style="height: 25vh;"></div>
+      <button id="show_button" onclick="randomShowImage()">显示图片</button>
+      <br/>
+      <div id='answer_div' style="visibility: hidden;">
+        <div>
+          <form>
+            {% for candidate in task_info.choises %}
+              <input name='answer' value='{{ candidate }}' type="radio" id='{{ candidate }}_radio'/> 
+              <label for="{{ candidate }}_radio">{{ candidate }}</label>
+            {% endfor %}
+          </form>
+        </div>
+        <button onclick="confirm()">确定</button>
+      </div>
+      <div style="position: relative;">
+        <img id='main_img' src="{{ task_info.img_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>  
+        <img id='noise_img' src="{{ task_info.noise_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>
+      </div>
+    </div>
+  </body>
+
+  <script>
+      function confirm(){
+        let answer = null;
+        {% for candidate in task_info.choises %}
+          if(document.getElementById("{{ candidate }}_radio").checked){
+            answer = '{{ candidate }}';
+          }
+        {% endfor %}
+        if(answer == null){
+          Toast("请选择一个答案");
+          return;
+        }
+
+        axios.post('/confirm', {
+            answer: answer,
+            index: parseInt('{{ task_info.index }}'),
+            tn: "{{ task_info.task_name }}",
+            randomWaitTime: randomWaitTime
+        }).then(r=>{
+          location.reload();
+        }).catch(error=>{
+            Toast("失败");
+            console.log(error);
+        })
+
+
+      }
+      function hideImage(){
+          document.getElementById("noise_img").style.display = "";
+          document.getElementById("main_img").style.display = "none";
+          document.getElementById("answer_div").style.visibility = "";
+      }
+
+      let randomWaitTime;
+      function randomShowImage(){
+        document.getElementById("show_button").style.visibility = "hidden";
+        randomWaitTime = Math.floor(Math.random() * 5000);
+        console.log(`waiting for ${randomWaitTime} ms`);
+        setTimeout(showImage, randomWaitTime);
+      }
+
+      function showImage(){
+        document.getElementById("main_img").style.display = "";
+        setTimeout(hideImage, 40);
+      }
+      function Toast(msg,duration){
+        duration=isNaN(duration)?1000:duration;
+        var m = document.createElement('div');
+        m.innerHTML = msg;
+        m.style.cssText="width:fit-content; padding:0px 5px; background:#000; opacity:0.5; height:40px; color:#fff; line-height:40px; text-align:center; border-radius:5px; position:fixed; top:80%; left:50%; transform: translate(-50%, 0); z-index:999999; font-weight:bold;";
+        document.body.appendChild(m);
+        setTimeout(function() {
+            var d = 0.5;
+            m.style.webkitTransition = '-webkit-transform ' + d + 's ease-in, opacity ' + d + 's ease-in';
+            m.style.opacity = '0';
+            setTimeout(function() { document.body.removeChild(m) }, d * 1000);
+        }, duration);
+    }
+  </script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.20.0-0/axios.js"></script>
+</html>

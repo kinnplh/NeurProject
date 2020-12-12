@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>生成任务</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div>用户名：<input type="text" id='user_name_input'/> </div>
+    <div>任务长度：<input type="number" id='task_length_input' value='100'/></div>
+    <div>图片展示时间（ms）：<input type="number" id='show_length_input' value='40'/></div>
+    <div>噪声中点横向比例：<input type="number" step="any" id='noise_cx_ratio' value="0.5" /></div>
+    <div>噪声中点纵向比例：<input type="number" step="any" id='noise_cy_ratio' value="0.5"/></div>
+    <div>噪声边长：<input type='number' id='noise_size' value="100"/></div>
+    <div>
+        <p>可选图片类别</p>
+        {% for class_info in class_list %}
+            {% if class_info.default %}
+                <input type="checkbox" id='{{class_info.name}}_box' checked='true'/> 
+            {% else %}
+                <input type="checkbox" id='{{class_info.name}}_box'/> 
+            {% endif%}
+            <label for="{{class_info.name}}_box">{{class_info.name}}</label>
+        {% endfor %}
+    </div>
+    <div>
+        <button onclick="generate()">生成</button>
+    </div>
+    <div id="info_div" style="display: none;">
+        生成成功：<span id='task_name_span'></span>
+        <a id='jump_link' href="" target="_blank">点击这里跳转</a>
+    </div>
+</body>
+<script>
+    function Toast(msg,duration){
+        duration=isNaN(duration)?1000:duration;
+        var m = document.createElement('div');
+        m.innerHTML = msg;
+        m.style.cssText="width:fit-content; padding:0px 5px; background:#000; opacity:0.5; height:40px; color:#fff; line-height:40px; text-align:center; border-radius:5px; position:fixed; top:80%; left:50%; transform: translate(-50%, 0); z-index:999999; font-weight:bold;";
+        document.body.appendChild(m);
+        setTimeout(function() {
+            var d = 0.5;
+            m.style.webkitTransition = '-webkit-transform ' + d + 's ease-in, opacity ' + d + 's ease-in';
+            m.style.opacity = '0';
+            setTimeout(function() { document.body.removeChild(m) }, d * 1000);
+        }, duration);
+    }
+
+    function generate(){
+        let user_name = document.getElementById('user_name_input').value;
+        if(user_name.length === 0){
+            Toast("输入用户名");
+            return;
+        }
+
+        let task_length = parseInt(document.getElementById('task_length_input').value);
+        let show_time = parseInt(document.getElementById('show_length_input').value);
+        let noise_cx_ratio = parseFloat(document.getElementById('noise_cx_ratio').value);
+        let noise_cy_ratio = parseFloat(document.getElementById('noise_cy_ratio').value);
+        let noise_size = parseFloat(document.getElementById('noise_size').value);
+        let selected_class_list = [];
+        {% for class_info in class_list %}
+            let seleted_{{class_info.name}} = document.getElementById('{{ class_info.name }}_box').checked;
+            if(seleted_{{class_info.name}}){
+                selected_class_list.push("{{ class_info.name }}");
+            }
+        {% endfor%}
+        if(selected_class_list.length < 2){
+            Toast("必须至少选择两个类别");
+            return;
+        }
+        
+        axios.post('/generate_from_html', {
+            user_name: user_name,
+            task_length: task_length,
+            show_time: show_time,
+            noise_cx_ratio: noise_cx_ratio,
+            noise_cy_ratio: noise_cy_ratio,
+            noise_size: noise_size, 
+            selected_class_list: selected_class_list
+        }).then(r=>{
+            document.getElementById('info_div').style.display = "";
+            document.getElementById('task_name_span').textContent = r.data.task_name;
+            document.getElementById('jump_link').href = `/task?tn=${r.data.task_name}`;
+            Toast("完成任务生成");
+        }).catch(error=>{
+            Toast("失败");
+            console.log(error);
+        })
+    }
+
+</script>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/axios/0.20.0-0/axios.js"></script>
+
+</html>
