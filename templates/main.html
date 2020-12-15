@@ -7,7 +7,7 @@
   <body>
     <div style="text-align: center;">
       <div style="height: 25vh;"></div>
-      <button id="show_button" onclick="randomShowImage()">显示图片</button>
+      <button id="show_button" onclick="randomShowImage()">加载中。。。</button>
       <br/>
       <div id='answer_div' style="visibility: hidden;">
         <div>
@@ -22,7 +22,7 @@
       </div>
       <div style="position: relative;">
         <img id='attention_img' src="/static/cross.jpg" style="position: absolute; transform: translate(-50%, 0%);"/>  
-        <img id='main_img' src="{{ task_info.img_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>  
+        <img id='main_img' onload="main_img_loaded()" src="{{ task_info.img_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>  
         <img id='noise_img' src="{{ task_info.noise_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>
       </div>
     </div>
@@ -55,6 +55,10 @@
 
 
       }
+
+			function main_img_loaded(){
+					document.getElementById("show_button").text = "显示图片";
+			}
       function hideImage(){
           document.getElementById("noise_img").style.display = "";
           document.getElementById("main_img").style.display = "none";

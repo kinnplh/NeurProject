@@ -174,6 +174,40 @@ def confirm_answer():
     
     return jsonify(state='success')
 
+@app.route('/show_result', methods=['GET'])
+def show_result():
+    task_main_dir = task_dir = os.path.join('static', 'task_info')
+    task_name_list = os.listdir(task_main_dir)
+    result = ""
+    for tn in task_name_list:
+        task_root_dir = os.path.join(task_main_dir, tn)
+        if not os.path.isdir(task_root_dir):
+            continue
+        tn_info_path = os.path.join(task_root_dir, 'info.json')
+        if not os.path.exists(tn_info_path):
+            continue
+        with open(tn_info_path, 'r') as f:
+            tn_info = json.load(f)
+        next_index = tn_info['next_index']
+        count_all = next_index
+        count_right = 0
+        for task_index in range(count_all):
+            one_task_root = os.path.join(task_root_dir, str(task_index))
+            with open(os.path.join(one_task_root, 'info.json'), 'r') as f:
+                label = json.load(f)['class_label']
+            with open(os.path.join(one_task_root, 'res.json'), 'r') as f:
+                answer = json.load(f)['answer']
+            if label == answer:
+                count_right += 1
+        if count_all == 0:
+            continue
+        score = count_right / count_all * 100
+        result = result + "{},{},{},{}\n".format(tn, count_right, count_all, score)
+    
+    result = "task_name, right_num, tried_num, score\n" + result
+    
+    return'<pre>'+ result + '</pre>'
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=12123, debug=True)
