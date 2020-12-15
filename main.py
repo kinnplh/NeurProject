@@ -164,11 +164,13 @@ def confirm_answer():
     index = int(request.json.get('index'))
     task_name = request.json.get('tn')
     random_wait = request.json.get('randomWaitTime')
+    confidence_scale = request.json.get('confidence_scale')
     result_path = os.path.join('static', 'task_info', task_name, str(index), 'res.json')
     with open(result_path, 'w') as f:
         json.dump({
             'answer': answer,
-            'random_wait': random_wait
+            'random_wait': random_wait,
+            'confidence_scale': confidence_scale
         }, f)
     
     task_dir = os.path.join('static', 'task_info', task_name)
@@ -195,11 +197,12 @@ name_to_list = {
 def generate_task_for_user():
     user_name = request.args.get('u')
     task_info_dir = os.path.join('static', 'task_info')
-    all_crt_task_names = os.listdir(task_info_dir)
     task_names =[]
-    for crt_tn in all_crt_task_names:
-        if crt_tn.startswith(user_name):
-            task_names.append(crt_tn)
+    if os.path.exists(task_info_dir):
+        all_crt_task_names = os.listdir(task_info_dir)
+        for crt_tn in all_crt_task_names:
+            if crt_tn.startswith(user_name):
+                task_names.append(crt_tn)
     
     result = ""
     if len(task_names) == 0:

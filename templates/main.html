@@ -60,7 +60,7 @@
       let randomWaitTime;
       function randomShowImage(){
         document.getElementById("show_button").style.visibility = "hidden";
-        randomWaitTime = Math.floor(Math.random() * 2000);
+        randomWaitTime = 500 + Math.floor(Math.random() * 2000);
         console.log(`waiting for ${randomWaitTime} ms`);
         setTimeout(showImage, randomWaitTime);
       }
