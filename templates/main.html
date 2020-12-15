@@ -4,29 +4,6 @@
     <title>main</title>
 
   </head>
-  <body>
-    <div style="text-align: center;">
-      <div style="height: 25vh;"></div>
-      <button id="show_button" onclick="randomShowImage()">加载中。。。</button>
-      <br/>
-      <div id='answer_div' style="visibility: hidden;">
-        <div>
-          <form>
-            {% for candidate in task_info.choises %}
-              <input name='answer' value='{{ candidate }}' type="radio" id='{{ candidate }}_radio'/> 
-              <label for="{{ candidate }}_radio">{{ candidate }}</label>
-            {% endfor %}
-          </form>
-        </div>
-        <button onclick="confirm()">确定</button>
-      </div>
-      <div style="position: relative;">
-        <img id='attention_img' src="/static/cross.jpg" style="position: absolute; transform: translate(-50%, 0%);"/>  
-        <img id='main_img' onload="main_img_loaded()" src="{{ task_info.img_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>  
-        <img id='noise_img' src="{{ task_info.noise_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>
-      </div>
-    </div>
-  </body>
 
   <script>
       function confirm(){
@@ -41,11 +18,26 @@
           return;
         }
 
+        let confidence_scale = null;
+        let scales = [0,1,2,3,4];
+        for(let s of scales){
+          let crtId = `confidence_${s}_radio`;
+          if(document.getElementById(crtId).checked){
+            confidence_scale = s;
+          }
+        }
+
+        if(confidence_scale == null){
+          Toast("请选择信心");
+          return;
+        }
+
         axios.post('/confirm', {
             answer: answer,
             index: parseInt('{{ task_info.index }}'),
             tn: "{{ task_info.task_name }}",
-            randomWaitTime: randomWaitTime
+            randomWaitTime: randomWaitTime,
+            confidence_scale: confidence_scale
         }).then(r=>{
           location.reload();
         }).catch(error=>{
@@ -57,7 +49,7 @@
       }
 
 			function main_img_loaded(){
-					document.getElementById("show_button").text = "显示图片";
+					document.getElementById("show_button").innerText = "显示图片";
 			}
       function hideImage(){
           document.getElementById("noise_img").style.display = "";
@@ -93,4 +85,44 @@
     }
   </script>
   <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.20.0-0/axios.js"></script>
+  <body>
+    <div style="text-align: center;">
+      <div style="height: 25vh;"></div>
+      <button id="show_button" onclick="randomShowImage()">加载中。。。</button>
+      <br/>
+      <div id='answer_div' style="visibility: hidden;">
+        <div>
+          <form>
+            {% for candidate in task_info.choises %}
+              <input name='answer' value='{{ candidate }}' type="radio" id='{{ candidate }}_radio'/> 
+              <label for="{{ candidate }}_radio">{{ candidate }}</label>
+            {% endfor %}
+          </form>
+          <form>
+            <input name='scale' type="radio" id='confidence_0_radio'/> 
+            <label for="confidence_0_radio">信心0（完全是猜的）</label>
+            
+            <input name='scale' type="radio" id='confidence_1_radio'/> 
+            <label for="confidence_1_radio">信心 25%</label>
+            
+            <input name='scale' type="radio" id='confidence_2_radio'/> 
+            <label for="confidence_2_radio">信心 50%（有一半的依据，一半的猜测）</label>
+            
+            <input name='scale' type="radio" id='confidence_3_radio'/> 
+            <label for="confidence_3_radio">信心 75%</label>
+            
+            <input name='scale' type="radio" id='confidence_4_radio' checked='true'/> 
+            <label for="confidence_4_radio">信心 100%（我很确定）</label>
+
+          </form>
+        </div>
+        <button onclick="confirm()">确定</button>
+      </div>
+      <div style="position: relative;">
+        <img id='attention_img' src="/static/cross.jpg" style="position: absolute; transform: translate(-50%, 0%);"/>  
+        <img id='main_img' onload="main_img_loaded()" src="{{ task_info.img_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>  
+        <img id='noise_img' src="{{ task_info.noise_path }}" style="display: none; position: absolute; transform: translate(-50%, 0%);"/>
+      </div>
+    </div>
+  </body>
 </html>
