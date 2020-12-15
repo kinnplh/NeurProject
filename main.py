@@ -194,25 +194,32 @@ name_to_list = {
 @app.route('/generate_task_for_user', methods=['GET'])
 def generate_task_for_user():
     user_name = request.args.get('u')
-    class_names = list(name_to_list.keys())
-    last_times = [20, 30, 40, 80, 160]
-    random.shuffle(class_names)
-    random.shuffle(last_times)
-    noise_size = [0, 1/3]
-
+    task_info_dir = os.path.join('static', 'task_info')
+    all_crt_task_names = os.listdir(task_info_dir)
     task_names =[]
-
-    for i in range(5):
-        class_name = class_names[i]
-        last_time = last_times[i]
-
-        tn1 = generate_task("{}_{}_{}_33".format(user_name, class_name, last_time), name_to_list[class_name], 20, last_time, None, 1/3)
-        task_names.append(tn1)
-
-        tn2 = generate_task("{}_{}_{}_0".format(user_name, class_name, last_time), name_to_list[class_name], 20, last_time, None, 0)
-        task_names.append(tn2)
+    for crt_tn in all_crt_task_names:
+        if crt_tn.startswith(user_name):
+            task_names.append(crt_tn)
     
     result = ""
+    if len(task_names) == 0:
+        class_names = list(name_to_list.keys())
+        last_times = [20, 30, 40, 80, 160]
+        random.shuffle(class_names)
+        random.shuffle(last_times)
+        noise_size = [0, 1/3]
+
+        for i in range(5):
+            class_name = class_names[i]
+            last_time = last_times[i]
+
+            tn1 = generate_task("{}_{}_{}_33".format(user_name, class_name, last_time), name_to_list[class_name], 20, last_time, None, 1/3)
+            task_names.append(tn1)
+
+            tn2 = generate_task("{}_{}_{}_0".format(user_name, class_name, last_time), name_to_list[class_name], 20, last_time, None, 0)
+            task_names.append(tn2)
+    else:
+        result = "<p>已有生成结果</p>"
 
     for tn in task_names:
         result = result + "<p><a href='/task?tn={}' target='_blank'>{}</a></p>\n".format(tn, tn)
